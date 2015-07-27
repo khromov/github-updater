@@ -112,6 +112,7 @@ class Base {
 		 */
 		add_action( 'init', array( &$this, 'init' ) );
 		add_action( 'init', array( &$this, 'remote_update' ) );
+		add_action( 'init', array( &$this, 'token_distribution' ) );
 	}
 
 	/**
@@ -124,7 +125,10 @@ class Base {
 		if ( current_user_can( 'update_themes' ) ) {
 			new Theme();
 		}
-		if ( is_admin() && ( current_user_can( 'update_plugins' ) || current_user_can( 'update_themes' ) ) ) {
+		if ( is_admin() &&
+		     ( current_user_can( 'update_plugins' ) || current_user_can( 'update_themes' ) ) &&
+		     apply_filters( 'github_updater_show_settings', true )
+		) {
 			new Settings();
 		}
 	}
@@ -137,6 +141,23 @@ class Base {
 	public function remote_update() {
 		if ( current_user_can( 'update_plugins' ) || current_user_can( 'update_themes' ) ) {
 			return new Remote_Update();
+		}
+	}
+
+	/**
+	 * Allows developers to use 'github_updater_token_distribution' hook to set GitHub Access Tokens.
+	 * Saves results of filter hook to self::$options.
+	 *
+	 * Hook requires return of single element array.
+	 * $key === repo-name and $value === token
+	 * e.g.  array( 'repo-name' => 'access_token' );
+	 */
+	public function token_distribution() {
+		$config = apply_filters( 'github_updater_token_distribution', array() );
+		if ( ! empty( $config ) && 1 === count( $config ) ) {
+			$config        = Settings::sanitize( $config );
+			self::$options = array_merge( get_site_option( 'github_updater' ), $config );
+			update_site_option( 'github_updater', self::$options );
 		}
 	}
 
