@@ -127,7 +127,7 @@ class Base {
 		}
 		if ( is_admin() &&
 		     ( current_user_can( 'update_plugins' ) || current_user_can( 'update_themes' ) ) &&
-		     apply_filters( 'github_updater_show_settings', true )
+		     ! apply_filters( 'github_updater_hide_settings', false )
 		) {
 			new Settings();
 		}
